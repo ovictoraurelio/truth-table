@@ -9,11 +9,14 @@
 
 using namespace std;
 
+string header, dashed;
 string exprGlobal;
 int sizeOfAllExprs;
 vector<pair<int,int> > exprs;
 map<string, bool> resultsLine;
 map<char,int > m,cs;
+
+int m = {0,0,0,0}, cs = {0,0,0,0};
 
 int szM(map<char,int> m){
 	int t=0;
@@ -22,7 +25,7 @@ int szM(map<char,int> m){
 	return t;
 }
 // This method print a string thats start at index i and goes to index l
-void ps(char *s, int i, int l){	
+void ps(char *s, int i, int l){
 	while(i<=l)printf("%c", s[i++]);
 }
 // This method compare a string thats start at index i and goes to index l
@@ -31,28 +34,52 @@ bool compareStr(char *s, int la, int ra, int lb, int rb){
 	for(int i=la; i<=ra; i++) if(s[i] != s[(i-la)+lb]) return false;	
 	return true;
 }
-
+//set in a map, wich var i'm use
 map<char,int> setVarsOnExprs(map<char,int> m, char *s){
 	m['x'] = m['y'] = m['z'] = m['t'] = 0;	
 	while(s = strpbrk(s, "xyzt")) m[*(s++)] = 1;
 	return m;
 }
-
-int getExprs(char *s, int start, int end){
-	int sAll = strlen(s);
-	stack<int> l;//left (
+//calc a value for a minimal logic expression
+bool calcExpr(int a, int b, char c){
+	switch(c){		
+		case '+': return a | b;
+		case '.': return a & b;		
+		case '>': return (!a | b);
+		default: return a;
+	}
+}
+//checking value of a literal
+bool vM(char a){	
+	if(a == 48)return false;
+	if(a == 49)return true;
+	return cs[a];
+}
+bool solveMin(string e){
+	if(e.size() == 1){
+			return vM(e.at(0));
+	}else{
+		if(e.size() == 4){// (-x)			
+			return !vM(e.at(2));
+		}if(e.size() == 5){//(x+y)
+			return calcExpr(vM(e.at(1)), vM(e.at(3)), e.at(2));// seriam as operações...
+		}
+	}
+}
+//getting all exprs inside ( ) of a expression
+void getExprs(char *s, int start, int end){	
+	stack<int> l;//left
 	for(int i=0; i<=end; i++){
-		if(s[i] == '('){
+		if(s[i] == '('){			
 			l.push(i);
-		}else if(s[i] == ')'){
-			sAll += (i - l.top() - 1);//talvez tenha um -1 aqui..
+		}else if(s[i] == ')'){			
 			exprs.push_back(pair<int,int>(l.top(), i));
 			l.pop();
 		}
 	}
-	return sAll;
 }
 
+//removing equals exprs of a expresion
 void redundancyRemove(char *s){
 	for(int i=exprs.size()-1; i>0; i--){		
 		for(int j=0; j<i; j++){			
@@ -63,64 +90,62 @@ void redundancyRemove(char *s){
 	}
 }
 
-bool calcExpr(int a, int b, char c){
-	switch(c){		
-		case '+': return a | b;
-		case '.': return a & b;		
-		case '>': return (!a | b);
-		default: return a;
-	}
-}
-
-bool vM(char a){	
-	if(int(a) == 0)return false;
-	if(int(a) == 1) return true;
-	//printf("::%c::\n", a);
-	return cs[a];
-}
-
-bool solveMin(string e){
-	if(e.size() == 1){
-			return vM(e.at(0));
-	}else{
-		if(e.size() == 4){// (-x)
-			//printf("\naqui %c - %d-%d\n", e.at(2),vM(e.at(2)),!vM(e.at(2)));
-			return !vM(e.at(2));
-		}if(e.size() == 5){// (x+y)
-			return calcExpr(vM(e.at(1)), vM(e.at(3)), e.at(2));// seriam as operações...
-		}
-	}
-}
-
-bool solveExpr(){
-	string lookingFor, current;
-	size_t fSubExpr;
-	//printf("I will lookingFor %d exprs\n", exprs.size());
+void solveExprs(){
+	string lookingFor, current, original;
+	size_t fSubExpr;	
 	for(int i=0; i<exprs.size(); i++){		
 		current = exprGlobal.substr(exprs[i].first, exprs[i].second - exprs[i].first + 1);
-	//	cout << "The expr: " << current;
-		if(current.size() <= 5){// (x+y) ou -x			
-			//printf("inside her %d\n",solveMin(current.c_str());
+		original = current;	
+		if(current.size() <= 5){// (x+y) ou -x						
 			resultsLine[current] = solveMin(current.c_str());
 		}else{
-			for(int j=0; j<exprs.size(); j++){
-				lookingFor = exprGlobal.substr(exprs[j].first, exprs[j].second - exprs[j].first + 1);
-				if(j < i){//ordem crescente das expressões..
-					fSubExpr = current.find(lookingFor);
-					if(fSubExpr != string::npos){//buscando as subexpressões e substituindo pelos valores já conhecidos
-						current.replace(current.begin() + fSubExpr, current.begin() + lookingFor.size(),1, resultsLine[lookingFor]);
+			/*for(int j=0; j<exprs.size(); j++){*/
+				/*lookingFor = exprGlobal.substr(exprs[j].first, exprs[j].second - exprs[j].first + 1);				
+				if(j < i){
+					while(current.find(lookingFor) != string::npos){//buscando as subexpressões e substituindo pelos valores já conhecidos
+						current.replace(current.find(lookingFor), lookingFor.size(),1,resultsLine[lookingFor] ? '1' : '0');
+					}
+				}*/
+				/*cout << " valores: x: " << cs['x'] << " y:"  << cs['y'] << " z: " << cs['z'] << " t: " << cs['t'];*/
+				/*cout << endl << endl << current << endl;*/
+
+				int last;
+				for(int k=0; k<current.size(); k++){					
+					if(current.at(k) == '('){			
+						last = k;
+					}else if(current.at(k) == ')'){
+						/*printf("inside %d-%d\n", last, k);
+						cout << " vou resolver: " << current.substr(last, k-last+1) << endl;*/
+						current.replace(last, k - last +1,1, solveMin(current.substr(last, k-last + 1)) ? '1':'0');
+						/*cout << " new current: " << current << endl;*/
+						//exprs.push_back(pair<int,int>(l.top(), k));
+						last = 0;
+						k=-1;
 					}
 				}
-				resultsLine[current] = solveMin(current);
-			}
+
+
+				resultsLine[original] = solveMin(current);
+				/*cout << "Solving for " << original << " torned: " << current << " value " << resultsLine[original] << endl;*/
+			/*}	*/					
 		}		
-		//printf("\tThe boolean %d\n", resultsLine[current]);
 	}
+}
+
+void showResults(){
+	solveExprs();
+	//for (std::map<string,bool>::iterator it=resultsLine.begin(); it!=resultsLine.end(); ++it)
+	for(int i=0; i<exprs.size(); i++){
+		string current = exprGlobal.substr(exprs[i].first, exprs[i].second - exprs[i].first + 1);
+		for(int b=0; b<exprs[i].second - exprs[i].first; b++) printf(" ");
+		printf("%d|",resultsLine[current]);
+	}
+	printf("\n");
 }
 
 
 
-void calcInputs(map<char,int> m){
+void solveTable(map<char,int> m){
 	int size = szM(m);	
 	
 	for(int x=0; x<(size>0?2:0); x++){
@@ -128,56 +153,51 @@ void calcInputs(map<char,int> m){
 			for(int z=0; z<(size>2?2:0); z++){
 				for(int t=0; t<(size>3?2:0); t++){					
 					if(size==4){
-						m['x']=x%2;m['y']=y%2;m['z']=z%2;m['t']=t%2;
-						for(int i=0; i<sizeOfAllExprs; i++)printf("-");printf("\n");
+						cs['x']=x%2;cs['y']=y%2;cs['z']=z%2;cs['t']=t%2;
+						cout << dashed << endl;
 						//previous...						
 						printf("|%d|%d|%d|%d|", m['x'], m['y'], m['z'], m['t']);						
 						//... results
-						solveExpr();
-						for (std::map<string,bool>::iterator it=resultsLine.begin(); it!=resultsLine.end(); ++it)
-    						std::cout << it->first << " => " << it->second << '\n';
-
-						printf("|\n");
+						showResults();
 					}
 				}
 				if(size==3){
-					m['x']=x%2;m['y']=y%2;m['z']=z%2;m['t']=z%2;
+					cs['x']=x%2;
+					cs['y']=y%2;
+					if(m['y']){						
+						cs['z']=z%2;					
+					}else{
+						cs['z']=y%2;
+					}
+					cs['t']=z%2;
 					//previous...
-					for(int i=0; i<sizeOfAllExprs; i++)printf("-");printf("\n");
-					printf("|%d|%d|%d|", m['x'], m['y'], m['z']);
+					cout << dashed << endl;
+					printf("|%d|%d|%d|", cs['x'], cs['y'], cs['z']);
 					//... results
-					printf("\n");
+					showResults();					
 				}
 			}
 			if(size==2){
 				cs['x']=x%2;cs['y']=y%2;cs['z']=y%2;cs['t']=y%2;
 				//previous...
-				for(int i=0; i<sizeOfAllExprs; i++)printf("-");printf("\n");
-				printf("|%d|%d|", cs['x'], cs['y']);
-
-				solveExpr();
-				//for (std::map<string,bool>::iterator it=resultsLine.begin(); it!=resultsLine.end(); ++it)
-				for(int i=0; i<exprs.size(); i++){
-					string current = exprGlobal.substr(exprs[i].first, exprs[i].second - exprs[i].first + 1);
-					printf("%d|",resultsLine[current]);
-				}
+				cout << dashed << endl;
+				printf("|%d|%d|", cs['x'], cs['y']);		
 				//... results
-				printf("\n");
+				showResults();				
 			}
 		}
 		if(size==1){
-			m['x']=x%2;m['y']=x%2;m['z']=x%2;m['t']=x%2;
+			cs['x']=x%2;cs['y']=x%2;cs['z']=x%2;cs['t']=x%2;
 			//previous...
-			for(int i=0; i<sizeOfAllExprs; i++)printf("-");printf("\n");
+			cout << dashed << endl;
 			printf("|%d|", m['x']);
 			//... results
-			printf("\n");
+			showResults();
 		}
 	}	
 }
 
-int main(){
-	
+int main(){	
 	int c=0,highlights[50];
 	char expr[MAX_EXPR],*f;
 	scanf("%d", &c);
@@ -186,26 +206,23 @@ int main(){
 		cin >> expr;
 		exprGlobal=string(expr);
 		m = setVarsOnExprs(m, expr);		
-		//printf("\n\tAll expr: %s\nPresent values x:%d, y:%d, z:%d, t:%d \t Lenght of truth table: %d\n",expr, m['x'], m['y'], m['z'], m['t'],szM(m));	
 
-		sizeOfAllExprs = getExprs(expr, 0, strlen(expr));
+		getExprs(expr, 0, strlen(expr));
 		redundancyRemove(expr);
-		for(int i=0; i<sizeOfAllExprs; i++)printf("-");printf("\n");		
-		printf("|%s%s%s%s",m['x']?"x|":"", m['y']?"y|":"", m['z']?"z|":"", m['t']?"t|":"");
+		
+		header = "|" + string() + (m['x']?"x|":"") + string() + (m['y']?"y|":"") + string() + (m['z']?"z|":"") + string() + (m['t']?"t|":"") + string();		
 		for(int i=0; i<exprs.size(); i++){
-			printf("|");
-			ps(expr, exprs[i].first, exprs[i].second);
-			//exprs.pop();
-		}
-		/*for(vector<pair<int, int> >::iterator it = exprs.begin(); it != exprs.end(); it++){
-			printf(" | ");
-			ps(expr, it->first, it->second);			
-		}*/
-		printf("\n");
-		calcInputs(m);
-		for(int i=0; i<sizeOfAllExprs; i++) printf("-");
-		printf("\n\n");
+			header += string(expr).substr(exprs[i].first, exprs[i].second - exprs[i].first + 1);
+			header += "|";
+		}			
+		for(int i=0; i<header.size(); i++) dashed += "-";
+		cout << dashed << endl << header << endl;
+
+		solveTable(m);
+		
+		cout << dashed << endl << endl;
 		exprs.clear();
+		dashed.clear();
 	}
 	return 0;
 }
