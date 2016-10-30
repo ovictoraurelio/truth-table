@@ -14,19 +14,13 @@ string exprGlobal;
 int sizeOfAllExprs;
 vector<pair<int,int> > exprs;
 map<string, bool> resultsLine;
-map<char,int > m,cs;
+// 		 x,y,z,t 		 x,y,z,t
+int m[4] = {0,0,0,0}, v[4] = {0,0,0,0};
 
-int m = {0,0,0,0}, cs = {0,0,0,0};
-
-int szM(map<char,int> m){
-	int t=0;
-	t+=m['t'];
-	for(int i=0; i<3; i++) t+=m[char('x'+i)];
+int szM(){
+	int t=0;	
+	for(int i=0; i<4; i++) t += m[i];
 	return t;
-}
-// This method print a string thats start at index i and goes to index l
-void ps(char *s, int i, int l){
-	while(i<=l)printf("%c", s[i++]);
 }
 // This method compare a string thats start at index i and goes to index l
 bool compareStr(char *s, int la, int ra, int lb, int rb){
@@ -34,11 +28,31 @@ bool compareStr(char *s, int la, int ra, int lb, int rb){
 	for(int i=la; i<=ra; i++) if(s[i] != s[(i-la)+lb]) return false;	
 	return true;
 }
-//set in a map, wich var i'm use
-map<char,int> setVarsOnExprs(map<char,int> m, char *s){
-	m['x'] = m['y'] = m['z'] = m['t'] = 0;	
-	while(s = strpbrk(s, "xyzt")) m[*(s++)] = 1;
-	return m;
+char itl(int i){//Int To Letter
+	switch(i){
+		case 0: return 'x';
+		case 1: return 'y';
+		case 2: return 'z';
+		case 3: return 't';
+		default: return -1;
+	};
+}
+int lti(char i){//Letter T oInt
+	switch(i){
+		case 'x': return 0;
+		case 'y': return 1;
+		case 'z': return 2;
+		case 't': return 3;
+		default: return -1;
+	};
+}
+//set in a vector, wich vars i'm use
+void setVarsOnExprs(char *s){
+	m[0] = m[1] = m[2] = m[3] = 0;
+	for(int i=0; i<strlen(s); i++)
+		if(lti(s[i]) != -1){
+			m[lti(s[i])] = 1;
+		}		
 }
 //calc a value for a minimal logic expression
 bool calcExpr(int a, int b, char c){
@@ -53,7 +67,7 @@ bool calcExpr(int a, int b, char c){
 bool vM(char a){	
 	if(a == 48)return false;
 	if(a == 49)return true;
-	return cs[a];
+	return v[lti(a)];
 }
 bool solveMin(string e){
 	if(e.size() == 1){
@@ -80,9 +94,9 @@ void getExprs(char *s, int start, int end){
 }
 
 //removing equals exprs of a expresion
-void redundancyRemove(char *s){
-	for(int i=exprs.size()-1; i>0; i--){		
-		for(int j=0; j<i; j++){			
+void redundancyRemove(char *s){	
+	for(int i=exprs.size()-1; i>=0; i--){
+		for(int j=0; j<i; j++){
 			if(i!=j && compareStr(s, exprs[i].first,exprs[i].second,exprs[j].first,exprs[j].second)){				
 				exprs.erase(exprs.begin() + i);
 			}
@@ -144,58 +158,49 @@ void showResults(){
 }
 
 
-
-void solveTable(map<char,int> m){
-	int size = szM(m);	
+void setValuesFromLine(int ind[4]){
+	for(int i=0,j=0; i<4; i++){
+		if(m[i] == 1){
+			v[i] = ind[j]%2;
+			j++;
+		}
+	}
+}
+void solveTable(){
+	int ind[4], size = szM();	
 	
-	for(int x=0; x<(size>0?2:0); x++){
-		for(int y=0; y<(size>1?2:0); y++){
-			for(int z=0; z<(size>2?2:0); z++){
-				for(int t=0; t<(size>3?2:0); t++){					
-					if(size==4){
-						cs['x']=x%2;cs['y']=y%2;cs['z']=z%2;cs['t']=t%2;
-						cout << dashed << endl;
-						//previous...						
-						printf("|%d|%d|%d|%d|", m['x'], m['y'], m['z'], m['t']);						
-						//... results
-						showResults();
-					}
+	for(ind[0]=0; ind[0]<(size>0?2:0); ind[0]++){		
+		for(ind[1]=0; ind[1]<(size>1?2:0); ind[1]++){			
+			for(ind[2]=0; ind[2]<(size>2?2:0); ind[2]++){				
+				for(ind[3]=0; ind[3]<(size>3?2:0); ind[3]++){
+						setValuesFromLine(ind);					
+						cout << dashed << endl;								
+						printf("|%d|%d|%d|%d|", v[0], v[1], v[2], v[3]);						
+						showResults();					
 				}
 				if(size==3){
-					cs['x']=x%2;
-					cs['y']=y%2;
-					if(m['y']){						
-						cs['z']=z%2;					
-					}else{
-						cs['z']=y%2;
-					}
-					cs['t']=z%2;
-					//previous...
+					setValuesFromLine(ind);					
 					cout << dashed << endl;
-					printf("|%d|%d|%d|", cs['x'], cs['y'], cs['z']);
-					//... results
+					printf("|%d|%d|%d|", ind[0]%2, ind[1]%2,ind[2]%2);					
 					showResults();					
 				}
 			}
 			if(size==2){
-				cs['x']=x%2;cs['y']=y%2;cs['z']=y%2;cs['t']=y%2;
-				//previous...
+				setValuesFromLine(ind);				
 				cout << dashed << endl;
-				printf("|%d|%d|", cs['x'], cs['y']);		
-				//... results
+				printf("|%d|%d|", ind[0]%2, ind[1]%2);				
 				showResults();				
 			}
 		}
 		if(size==1){
-			cs['x']=x%2;cs['y']=x%2;cs['z']=x%2;cs['t']=x%2;
-			//previous...
+			setValuesFromLine(ind);			
 			cout << dashed << endl;
-			printf("|%d|", m['x']);
-			//... results
+			printf("|%d|", ind[0]%2);			
 			showResults();
 		}
-	}	
-}
+	}
+}	
+
 
 int main(){	
 	int c=0,highlights[50];
@@ -204,13 +209,15 @@ int main(){
 	for(int k=1; k<=c; k++){
 		printf("Tabela #%d\n", k);
 		cin >> expr;
-		exprGlobal=string(expr);
-		m = setVarsOnExprs(m, expr);		
+		exprGlobal = string(expr);
+		setVarsOnExprs(expr);	
 
 		getExprs(expr, 0, strlen(expr));
+		//ainda é necessário ordenar as expressões por tamanho e caso o tamanho seja igual ordem lexicográfica.
+		//quando mudar de map para vector 
 		redundancyRemove(expr);
 		
-		header = "|" + string() + (m['x']?"x|":"") + string() + (m['y']?"y|":"") + string() + (m['z']?"z|":"") + string() + (m['t']?"t|":"") + string();		
+		header = "|" + string() + (m[0]?"x|":"") + string() + (m[1]?"y|":"") + string() + (m[2]?"z|":"") + string() + (m[3]?"t|":"") + string();
 		for(int i=0; i<exprs.size(); i++){
 			header += string(expr).substr(exprs[i].first, exprs[i].second - exprs[i].first + 1);
 			header += "|";
@@ -218,7 +225,7 @@ int main(){
 		for(int i=0; i<header.size(); i++) dashed += "-";
 		cout << dashed << endl << header << endl;
 
-		solveTable(m);
+		solveTable();
 		
 		cout << dashed << endl << endl;
 		exprs.clear();
