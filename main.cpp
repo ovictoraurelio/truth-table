@@ -1,15 +1,13 @@
 /***
 	*
-	* @author cin.ufpe.br/~vags
-	* @since 17/08/16
+	* @author victoraurelio.com
+	* @since 22/10/16
 	*
 */
-/*#include <bits/stdc++.h>*/
 #include <cstdio>
 #include <iostream>
 #include <cstring>
 #include <vector>
-
 
 #include <algorithm>
 #include <fstream>
@@ -18,6 +16,8 @@
 
 using namespace std;
 
+// file to output results
+ofstream outFile;
 // header is a string to show in header of table
 // dashed is ------ of table
 // expr is a string scanned from keyboard or from file
@@ -162,11 +162,11 @@ void solveExprs(){
 void showResults(){	
 	solveExprs();	
 	for(int i=0; i<exprs.size(); i++){		
-		for(int b=0; b<exprs[i].second - exprs[i].first; b++) cout << " ";		
-		cout << (results[i]?1:0) << "|";
+		for(int b=0; b<exprs[i].second - exprs[i].first; b++) outFile << " ";		
+		outFile << (results[i]?1:0) << "|";
 	}
 	results[exprs.size()-1] ? cT++ : cF++;//just consider last column of table
-	cout << endl;
+	outFile << endl;
 }
 
 void setValuesFromLine(int ind[4]){
@@ -185,28 +185,28 @@ void solveTable(){
 			for(ind[2]=0; ind[2]<(size>2?2:0); ind[2]++){				
 				for(ind[3]=0; ind[3]<(size>3?2:0); ind[3]++){
 						setValuesFromLine(ind);					
-						cout << dashed << endl;								
-						printf("|%d|%d|%d|%d|", v[0], v[1], v[2], v[3]);
+						outFile << dashed << endl;						
+						outFile << "|" << ind[0]%2 << "|" << ind[1]%2 << "|" << ind[2]%2 << "|" << ind[3]%2 << "|";
 						showResults();					
 				}
 				if(size==3){
 					setValuesFromLine(ind);					
-					cout << dashed << endl;
-					printf("|%d|%d|%d|", ind[0]%2, ind[1]%2,ind[2]%2);					
+					outFile << dashed << endl;					
+					outFile << "|" << ind[0]%2 << "|" << ind[1]%2 << "|" << ind[2]%2 << "|";
 					showResults();					
 				}
 			}
 			if(size==2){
 				setValuesFromLine(ind);				
-				cout << dashed << endl;
-				printf("|%d|%d|", ind[0]%2, ind[1]%2);				
+				outFile << dashed << endl;				
+				outFile << "|" << ind[0]%2 << "|" << ind[1]%2 << "|";
 				showResults();				
 			}
 		}
 		if(size==1){
 			setValuesFromLine(ind);			
-			cout << dashed << endl;
-			printf("|%d|", ind[0]%2);
+			outFile << dashed << endl;			
+			outFile << "|" << ind[0]%2 << "|";
 			if(expr.size()<=2){				
 				cT++;cF++;
 			}
@@ -218,12 +218,14 @@ void solveTable(){
 int main(){	
 	int c=0,highlights[50];
 	char *f;
-	ifstream inFile ("EntradaTabela.out", ios::binary);
-	if(inFile.is_open()){
-		cin >> c;
+	ifstream inFile ("Expressoes.in", ios::in);
+	outFile.open("Expressoes.out", ios::out);
+
+	if(inFile.is_open() && outFile.is_open()){
+		inFile >> c;
 		for(int k=1; k<=c; k++){
-			printf("Tabela #%d\n", k);
-			cin >> expr;
+			outFile << "Tabela #" << k << endl;
+			inFile >> expr;
 
 			setVarsOnExprs(expr);		
 			getExprs(expr);		
@@ -237,27 +239,29 @@ int main(){
 				header += "|";
 			}			
 			for(int i=0; i<header.size(); i++) dashed += "-";
-			cout << dashed << endl << header << endl;
+			outFile << dashed << endl << header << endl;
 
 			solveTable();
 		
-			cout << dashed << endl;		
+			outFile << dashed << endl;		
 
 			if(cT > 0 && cF > 0 ){
-				cout << "satisfativel e refutavel";
+				outFile << "satisfativel e refutavel";
 			}else if(cT > 0 and cF == 0){
-				cout << "satisfativel e tautologia";
-			}else{//if(cT == 0 && cF > 0)
-				cout << "insatisfativel e refutavel";
+				outFile << "satisfativel e tautologia";
+			}else{
+				outFile << "insatisfativel e refutavel";
 			}
-			cout << endl << endl;
+			outFile << endl << endl;
 
 			exprs.clear();
 			dashed.clear();
-			cT = cF = 0;
-			inFile.close();
+			cT = cF = 0;			
 		}
-	}else 
+		inFile.close();
+		outFile.close();
+	}else{
 		cout << "Nao consegui abrir o arquivo";
+	}
 	return 0;
 }
