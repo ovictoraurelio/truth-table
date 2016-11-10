@@ -125,7 +125,6 @@ void getExprs(string s){
 		}
 	}
 }
-
 //removing equals exprs of a expresion
 void redundancyRemove(string s){	
 	for(int i=exprs.size()-1; i>=0; i--){
@@ -136,7 +135,6 @@ void redundancyRemove(string s){
 		}
 	}
 }
-
 void solveExprs(){
 	string current;	
 	for(int i=0; i<exprs.size(); i++){		

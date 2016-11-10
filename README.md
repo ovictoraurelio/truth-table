@@ -1,6 +1,6 @@
 # Truth Table (logic)
 
-Este é um pequeno projeto construído para a cadeira "Lógica para programação" do CIn UFPE, do curso de Engenharia da Computação.
+Este é um pequeno projeto construído para a cadeira "Lógica para programação", do curso de Engenharia da Computação no CIn - UFPE.
 
 A proposta deste projeto é receber como entrada uma sequência N de expressões da lógica proposicional e construir suas N tabelas.
 
